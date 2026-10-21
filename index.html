@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Tracker</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #f4f4f4;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    form {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    input, select, button {
+        padding: 10px;
+        margin-top: 5px;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    table {
+        width: 100%;
+        margin-top: 20px;
+        background: white;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: center;
+    }
+/* Dashboard Cards */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.card {
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.income-card {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+
+.expense-card {
+    background: linear-gradient(135deg, #eb3349, #f45c43);
+}
+
+.balance-card {
+    background: linear-gradient(135deg, #4776e6, #8e54e9);
+}
+
+.card h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+}
+
+.card p {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0;
+}
+
+@media (max-width: 600px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+}
+/* Transaction History Table */
+table {
+    width: 100%;
+    margin-top: 20px;
+    background: white;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+th {
+    background-color: #343a40;
+    color: white;
+    padding: 14px;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+tr:hover {
+    background-color: #f1f5ff;
+}
+
+td button {
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    color: white;
+}
+
+td form:first-child button {
+    background-color: #4776e6;
+}
+
+td form:last-child button {
+    background-color: #e63946;
+}
+
+.export-btn {
+    display: inline-block;
+    background: #16a34a;
+    color: white;
+    padding: 12px 18px;
+    margin: 10px 0;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.export-btn:hover {
+    background: #15803d;
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <h1>Expense Tracker</h1>
+
+    <p>Track your income and expenses easily.</p>
+   ```html
+<h2>📊 Dashboard</h2>
+
+<div class="dashboard">
+    <h2>🥧 Expense Breakdown</h2>
+
+<div style="background: white; padding: 20px; margin: 20px 0; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 450px;">
+    <canvas id="expenseChart"></canvas>
+</div>
+
+    <div class="card income-card">
+        <h3>💰 Total Income</h3>
+        <p>₹{{ "%.2f"|format(total_income) }}</p>
+    </div>
+
+    <div class="card expense-card">
+        <h3>💸 Total Expense</h3>
+        <p>₹{{ "%.2f"|format(total_expense) }}</p>
+    </div>
+
+    <div class="card balance-card">
+        <h3>💳 Balance</h3>
+        <p>₹{{ "%.2f"|format(balance) }}</p>
+    </div>
+
+</div>
+
+    <h2>Add Transaction</h2>
+
+    <form method="POST">
+
+        <label>Amount:</label>
+        <input type="number" name="amount" placeholder="Enter amount" required>
+
+        <br><br>
+
+        <label>Type:</label>
+        <select name="type">
+            <option value="Income">Income</option>
+            <option value="Expense">Expense</option>
+        </select>
+
+        <br><br>
+
+        <label>Category:</label>
+        <input type="text" name="category" placeholder="Food, Travel, etc." required>
+
+        <br><br>
+
+        <button type="submit">Add Transaction</button>
+
+    </form>
+{% if message %}
+    <h3>{{ message }}</h3>
+{% endif %}
+<h2>Transaction History</h2>
+
+<a href="/export" class="export-btn">📥 Export Transactions to CSV</a>
+
+<form method="GET" action="/">
+    <input type="text" name="search" placeholder="Search category...">
+    <button type="submit">Search</button>
+</form>
+
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Amount</th>
+        <th>Type</th>
+        <th>Category</th>
+        <th>Action</th>
+    </tr>
+
+    {% for transaction in transactions %}
+    <tr>
+        <td>{{ transaction[0] }}</td>
+        <td>₹{{ transaction[1] }}</td>
+        <td>{{ transaction[2] }}</td>
+        <td>{{ transaction[3] }}</td>
+        <td>
+    <form action="/edit/{{ transaction[0] }}" method="GET">
+    <button type="submit">Edit</button>
+</form>
+    <form action="/delete/{{ transaction[0] }}" method="POST">
+        <button type="submit">Delete</button>
+    </form>
+</td>
+    </tr>
+    {% endfor %}
+
+</table>
+<script>
+    const expenseLabels = {{ expense_data | map(attribute=0) | list | tojson }};
+    const expenseAmounts = {{ expense_data | map(attribute=1) | list | tojson }};
+
+    const chartCanvas = document.getElementById("expenseChart");
+
+    new Chart(chartCanvas, {
+        type: "pie",
+        data: {
+            labels: expenseLabels,
+            datasets: [{
+                label: "Expenses",
+                data: expenseAmounts,
+                backgroundColor: [
+                    "#4776e6",
+                    "#38a169",
+                    "#ed8936",
+                    "#e53e3e",
+                    "#9f7aea",
+                    "#38b2ac",
+                    "#ed64a6"
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: "bottom"
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
